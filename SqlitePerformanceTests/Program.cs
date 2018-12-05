@@ -1,18 +1,20 @@
 ﻿using Microsoft.Data.Sqlite;
 using SqlitePerformanceTests.Models;
 using System;
+using System.Collections.Generic;
 
 namespace SqlitePerformanceTests
 {
     class Program
     {
-        private const int Insertions = 1000000;
+        private const int Insertions = 500000;
 
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-            MeasureTime("Insert Transaction", () => InsertTransaction(Insertions));
+            MeasureTime("insert Transaction", () => InsertTransaction(Insertions));
             //MeasureTime("Insert", () => Insert(Insertions));
+            MeasureTime("Map", () => Map());
             Console.ReadLine();
         }
 
@@ -74,6 +76,23 @@ namespace SqlitePerformanceTests
                 }
                 transaction.Commit();
             }
+        }
+
+        private static IEnumerable<Lichtpunkt> Map()
+        {
+            IList<Lichtpunkt> lps = new List<Lichtpunkt>();
+            var query = "SELECT ort, straße, hausnummer FROM Lichtpunkt";
+
+            using (var connection = GetConnection())
+            using (var command = new SqliteCommand(query, connection))
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    lps.Add(new Lichtpunkt { Ort = reader.GetString(0), Hausnummer = reader.GetInt32(1), Straße = reader.GetString(2) });
+                }
+            }
+            return lps;
         }
     }
 }
